@@ -62,13 +62,99 @@ func NewClusterSequence(jets []Jet, def JetDefinition) (*ClusterSequence, error)
 	if err != nil {
 		return nil, err
 	}
-
 	err = cs.run()
 	if err != nil {
 		return nil, err
 	}
 
 	return cs, err
+}
+
+// Constructor that doesn't initializes and runs
+func constructClusterSequence(jets []Jet, def JetDefinition) (*ClusterSequence, error) {
+	var err error
+	cs := &ClusterSequence{
+		def:      def,
+		alg:      def.Algorithm(),
+		strategy: def.Strategy(),
+		r:        def.R(),
+		jets:     make([]Jet, len(jets), len(jets)*2),
+	}
+
+	cs.r2 = cs.r * cs.r
+	cs.invR2 = 1.0 / cs.r2
+	cs.structure = ClusterSequenceStructure{cs}
+
+	copy(cs.jets, jets)
+
+	return cs, err
+}
+
+func (cs *ClusterSequence) uniqueHistoryOrder() []int {
+	lowConst := make([]int, len(cs.history))
+	histN := len(cs.history)
+	for i := range lowConst {
+		lowConst[i] = histN
+	}
+	for i := 0; i < histN; i++ {
+		lowConst[i] = imin(lowConst[i], i)
+		if cs.history[i].child > 0 {
+			lowConst[cs.history[i].child] = imin(lowConst[cs.history[i].child], lowConst[i])
+		}
+	}
+
+	extracted := make([]bool, histN)
+	for i := range extracted {
+		extracted[i] = false
+	}
+
+	uniqueTree := make([]int, 0, len(cs.history))
+
+	for i := 0; i < cs.initn; i++ {
+		if !extracted[i] {
+			uniqueTree = append(uniqueTree, i)
+			extracted[i] = true
+			uniqueTree, extracted = cs.extractTreeChildren(i, extracted, lowConst, uniqueTree)
+		}
+	}
+	return uniqueTree
+}
+
+func (cs *ClusterSequence) extractTreeChildren(position int, extracted []bool, lowConst []int, uniqueTree []int) ([]int, []bool) {
+	if !extracted[position] {
+		uniqueTree, extracted = cs.extractTreeParents(position, extracted, lowConst, uniqueTree)
+	}
+
+	child := cs.history[position].child
+	if child >= 0 {
+		uniqueTree, extracted = cs.extractTreeChildren(child, extracted, lowConst, uniqueTree)
+	}
+	return uniqueTree, extracted
+}
+
+func (cs *ClusterSequence) extractTreeParents(position int, extracted []bool, lowConst []int, uniqueTree []int) ([]int, []bool) {
+	if !extracted[position] {
+		parent1 := cs.history[position].parent1
+		parent2 := cs.history[position].parent2
+
+		if parent1 >= 0 && parent2 >= 0 {
+			if lowConst[parent1] > lowConst[parent2] {
+				temp := parent1
+				parent1 = parent2
+				parent2 = temp
+			}
+		}
+
+		if parent1 >= 0 && !extracted[parent1] {
+			uniqueTree, extracted = cs.extractTreeParents(parent1, extracted, lowConst, uniqueTree)
+		}
+		if parent2 >= 0 && !extracted[parent2] {
+			uniqueTree, extracted = cs.extractTreeParents(parent2, extracted, lowConst, uniqueTree)
+		}
+		uniqueTree = append(uniqueTree, position)
+		extracted[position] = true
+	}
+	return uniqueTree, extracted
 }
 
 // NumExclusiveJets returns the number of exclusive jets that would have been obtained

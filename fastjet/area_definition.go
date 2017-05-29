@@ -4,4 +4,12 @@
 
 package fastjet
 
-type AreaDefinition struct{}
+type AreaDefinition struct {
+	AreaType  int
+	GhostSpec *GhostedAreaSpec
+}
+
+const (
+	ActiveArea  = 0
+	PassiveArea = 1
+)

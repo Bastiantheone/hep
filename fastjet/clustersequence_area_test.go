@@ -34,7 +34,9 @@ func TestClusterSequenceArea(t *testing.T) {
 			def: fastjet.NewJetDefinition(
 				fastjet.KtAlgorithm, 1.0, fastjet.EScheme, fastjet.BestStrategy,
 			),
-			area:  fastjet.AreaDefinition{}, // ghost-area, active-area
+			area: fastjet.AreaDefinition{
+				AreaType:  fastjet.ActiveArea,
+				GhostSpec: fastjet.NewDefaultGhostAreaSpec()}, // ghost-area, active-area
 			ptmin: 5.0,
 		},
 		{
@@ -43,7 +45,9 @@ func TestClusterSequenceArea(t *testing.T) {
 			def: fastjet.NewJetDefinition(
 				fastjet.KtAlgorithm, 1.0, fastjet.EScheme, fastjet.BestStrategy,
 			),
-			area:  fastjet.AreaDefinition{}, // ghost-area, passive-area
+			area: fastjet.AreaDefinition{
+				AreaType:  fastjet.PassiveArea,
+				GhostSpec: fastjet.NewDefaultGhostAreaSpec()}, // ghost-area, passive-area
 			ptmin: 5.0,
 		},
 		{
@@ -52,7 +56,9 @@ func TestClusterSequenceArea(t *testing.T) {
 			def: fastjet.NewJetDefinition(
 				fastjet.AntiKtAlgorithm, 1.0, fastjet.EScheme, fastjet.BestStrategy,
 			),
-			area:  fastjet.AreaDefinition{}, // ghost-area, active-area
+			area: fastjet.AreaDefinition{
+				AreaType:  fastjet.ActiveArea,
+				GhostSpec: fastjet.NewDefaultGhostAreaSpec()}, // ghost-area, active-area
 			ptmin: 5.0,
 		},
 		{
@@ -61,7 +67,9 @@ func TestClusterSequenceArea(t *testing.T) {
 			def: fastjet.NewJetDefinition(
 				fastjet.AntiKtAlgorithm, 1.0, fastjet.EScheme, fastjet.BestStrategy,
 			),
-			area:  fastjet.AreaDefinition{}, // ghost-area, passive-area
+			area: fastjet.AreaDefinition{
+				AreaType:  fastjet.PassiveArea,
+				GhostSpec: fastjet.NewDefaultGhostAreaSpec()}, // ghost-area, passive-area
 			ptmin: 5.0,
 		},
 	} {
@@ -72,7 +80,7 @@ func TestClusterSequenceArea(t *testing.T) {
 			}
 			// TODO
 			if strings.Contains(test.name, "active") {
-				t.Skipf("active area: not implemented")
+				//t.Skipf("active area: not implemented")
 			}
 			test := test
 			particles, err := loadParticles(test.input)
