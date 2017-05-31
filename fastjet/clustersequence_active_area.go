@@ -61,6 +61,7 @@ func (aa *ClusterSequenceActiveArea) initialize() (bool, error) {
 
 	aa.averageArea = make([]float64, 2*len(aa.cs.jets))
 	aa.averageArea2 = make([]float64, 2*len(aa.cs.jets))
+	aa.averageP4 = make([]Jet, 2*len(aa.cs.jets))
 
 	aa.resizeAndZero()
 	aa.maxRapForArea = aa.ghostSpec.ghostMaxRap
@@ -242,7 +243,11 @@ func (aa *ClusterSequenceActiveArea) transferAreas(uniqueHist []int, gs *Cluster
 	}
 
 	for i := 0; i < len(our4Vectors); i++ {
-		// recombine plus equal
+		var err error
+		aa.averageP4[i], err = aa.def.recombiner.Recombine(&aa.averageP4[i], &our4Vectors[i])
+		if err != nil {
+
+		}
 	}
 
 	return uniqueHist, gs
@@ -320,14 +325,15 @@ func (aa *ClusterSequenceActiveArea) transferGhostFreeHistory(gs *ClusterSequenc
 }
 
 func (aa *ClusterSequenceActiveArea) postProcess() {
-	for _, a := range aa.averageArea {
-		a /= float64(aa.ghostSpec.repeat)
+	repeat := float64(aa.ghostSpec.repeat)
+	for i := range aa.averageArea {
+		aa.averageArea[i] /= repeat
 	}
-	for _, a2 := range aa.averageArea2 {
-		a2 /= float64(aa.ghostSpec.repeat)
+	for i := range aa.averageArea2 {
+		aa.averageArea2[i] /= repeat
 	}
 	if aa.ghostSpec.repeat > 1 {
-		temp := float64(aa.ghostSpec.repeat - 1)
+		temp := repeat - 1.0
 		for i := range aa.averageArea2 {
 			aa.averageArea2[i] = math.Sqrt(math.Abs(aa.averageArea2[i]-aa.averageArea[i]*aa.averageArea[i]) / temp)
 		}
@@ -337,18 +343,19 @@ func (aa *ClusterSequenceActiveArea) postProcess() {
 			aa.averageArea2[i] = 0
 		}
 	}
-	aa.nonJetArea /= float64(aa.ghostSpec.repeat)
-	aa.nonJetArea2 /= float64(aa.ghostSpec.repeat)
-	aa.nonJetArea2 = math.Sqrt(math.Abs(aa.nonJetArea2-aa.nonJetArea*aa.nonJetArea) / float64(aa.ghostSpec.repeat))
-	aa.nonJetN /= float64(aa.ghostSpec.repeat)
+	aa.nonJetArea /= repeat
+	aa.nonJetArea2 /= repeat
+	aa.nonJetArea2 = math.Sqrt(math.Abs(aa.nonJetArea2-aa.nonJetArea*aa.nonJetArea) / repeat)
+	aa.nonJetN /= repeat
 
-	for _, a := range aa.averageP4 {
-		x := 1 / float64(aa.ghostSpec.repeat) * a.Px()
-		y := 1 / float64(aa.ghostSpec.repeat) * a.Py()
-		z := 1 / float64(aa.ghostSpec.repeat) * a.Pz()
-		e := 1 / float64(aa.ghostSpec.repeat) * a.E()
+	for i, a := range aa.averageP4 {
+		x := 1.0 / repeat * a.Px()
+		y := 1.0 / repeat * a.Py()
+		z := 1.0 / repeat * a.Pz()
+		e := 1.0 / repeat * a.E()
 		p4 := fmom.NewPxPyPzE(x, y, z, e)
-		a.Set(p4.Clone())
+		aa.averageP4[i].Set(p4.Clone())
+		aa.averageP4[i].setupCache()
 	}
 }
 

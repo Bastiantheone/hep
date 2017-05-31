@@ -51,7 +51,7 @@ func NewDefaultSelector() *Selector {
 
 // FIXME is probably 3,-3 but test is killed with those values
 func (*Selector) getRapidityExtend() (float64, float64) {
-	return 1, -1
+	return -1, 1
 }
 
 func NewGhostedAreaSpec(selector Selector, repeat int, ghostArea float64, gridScatter float64,
@@ -76,7 +76,7 @@ func NewGhostedAreaSpec(selector Selector, repeat int, ghostArea float64, gridSc
 		actualGhostArea: -1,
 	}
 
-	max, min := gs.selector.getRapidityExtend()
+	min, max := gs.selector.getRapidityExtend()
 	gs.ghostMaxRap = 0.5 * (max - min)
 	gs.ghostRapOffset = 0.5 * (max + min)
 
