@@ -22,7 +22,7 @@ type Point struct {
 	dist2             float64 // dist2 is the squared distance to the nearest neighbor.
 	// id is used when points are removed. Copies of the points around the point to
 	// be removed are made. The ID is set incremental in counterclockwise order. It identifies
-	// the original. It is also used to determine if a Triangle is inside or outside the
+	// the original. It is also used to determine whether a Triangle is inside or outside the
 	// polygon formed by all those points.
 	id int
 }

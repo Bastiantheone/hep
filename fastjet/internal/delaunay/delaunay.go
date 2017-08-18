@@ -373,7 +373,7 @@ func (d *Delaunay) swapEdge(t1, t2 *Triangle) (nt1, nt2 *Triangle, updated []*Po
 	return nt1, nt2, updated
 }
 
-// retriangulateAnd Sew uses the re-triangulate and sew method to find the delaunay triangles
+// retriangulateAndSew uses the re-triangulate and sew method to find the delaunay triangles
 // inside the polygon formed by the CCW-ordered points. If k = len(points) then it has a
 // worst-time complexity of O(k*log(k)).
 func (d *Delaunay) retriangulateAndSew(points []*Point, parents []*Triangle) (updated []*Point) {
