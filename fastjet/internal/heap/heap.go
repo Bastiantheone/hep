@@ -41,7 +41,7 @@ func (h *Heap) Push(jeti, jetj int, dij float64) {
 
 // Pop returns the two jets with the lowest distance.
 // It returns -1, -1 when the heap is empty.
-func (h *Heap) Pop() (jeti, jetj int) {
+func (h *Heap) Pop() (jeti, jetj int, dij float64) {
 	if h.n == 0 {
 		return -1, -1
 	}
@@ -52,7 +52,7 @@ func (h *Heap) Pop() (jeti, jetj int) {
 	}
 	h.swap(1, h.n+1)
 	h.moveDown(1)
-	return item.jeti, item.jetj
+	return item.jeti, item.jetj, item.dij
 }
 
 // IsEmpty returns whether a heap is empty.
