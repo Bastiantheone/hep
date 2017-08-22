@@ -32,12 +32,15 @@ type Jet struct {
 	rap float64
 	pt2 float64
 	phi float64
+	// used indicates whether the jet has been used in a recombination
+	used bool
 }
 
 func NewJet(px, py, pz, e float64) Jet {
 	jet := Jet{
 		PxPyPzE: fmom.NewPxPyPzE(px, py, pz, e),
 		hidx:    -1,
+		used:    false,
 	}
 	jet.setupCache()
 	return jet
