@@ -20,7 +20,8 @@ type Point struct {
 	adjacentTriangles triangles // adjacentTriangles is a list of triangles containing the point.
 	nearest           *Point
 	dist2             float64 // dist2 is the squared distance to the nearest neighbor.
-	// id is used when points are removed. Copies of the points around the point to
+	// id is a unique identifier for each point. It is incrementally assigned when a point is inserted.
+	// It is used when points are removed. Copies of the points around the point to
 	// be removed are made. The ID is set incremental in counterclockwise order. It identifies
 	// the original. It is also used to determine whether a Triangle is inside or outside the
 	// polygon formed by all those points.
@@ -44,6 +45,11 @@ func (p *Point) NearestNeighbor() (*Point, float64) {
 // Coordinates returns the x,y coordinates of a Point.
 func (p *Point) Coordinates() (x, y float64) {
 	return p.x, p.y
+}
+
+// ID returns the id of the point.
+func (p *Point) ID() int {
+	return p.id
 }
 
 func (p *Point) String() string {
