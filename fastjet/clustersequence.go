@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"math"
 
+	"go-hep.org/x/hep/fastjet/internal/delaunay"
+	"go-hep.org/x/hep/fastjet/internal/heap"
 	"go-hep.org/x/hep/fmom"
 )
 
@@ -497,4 +499,124 @@ func (cs *ClusterSequence) runN3Dumb() error {
 		}
 	}
 	return err
+}
+
+func (cs *ClusterSequence) runNlnN() error {
+	d := delaunay.HierarchicalDelaunay()
+	points := make([]*delaunay.Point, len(cs.jets), 2*len(cs.jets))
+	// create points
+	for i := 0; i < len(cs.jets); i++ {
+		rap := cs.jets[i].Rapidity()
+		phi := cs.jets[i].Phi()
+		for phi < 0 {
+			phi += math.Pi * 2
+		}
+		for phi >= math.Pi*2 {
+			phi -= math.Pi * 2
+		}
+		points[i] = delaunay.NewPoint(rap, phi)
+		d.Insert(points[i])
+	}
+	h := heap.NewHeap()
+	for i, p := range points {
+		n, dij := p.NearestNeighbor()
+		_, y := p.Coordinates()
+		// FIXME having access to the ID is probably the easiest way to implements this.
+		// when a nearest neighbor is farther then the border a mirror point is inserted.
+		if dij > y {
+
+		} else if dij > math.Pi*2-y {
+
+		}
+		j := n.ID()
+		cs.addktDistance(h, i, j, dij)
+	}
+	n := len(cs.jets)
+	for i := 0; i < n; i++ {
+		var jeti, jetj int
+		var dij float64
+		var recombineWithBeam bool
+		usedi, usedj := true, true
+		for usedi || usedj {
+			jeti, jetj, dij = h.Pop()
+			if jeti == -1 {
+				panic(fmt.Errorf("fastjet: heap is empty at index %d", i))
+			}
+			usedi = cs.jets[jeti].used
+			recombineWithBeam = (jetj == beamJetIndex)
+			if recombineWithBeam {
+				usedj = false
+			} else {
+				usedj = cs.jets[jetj].used
+			}
+		}
+		var updated []*delaunay.Point
+		if recombineWithBeam {
+			cs.jets[jeti].used = true
+			err := cs.ibRecombinationStep(jeti, dij)
+			if err != nil {
+				return err
+			}
+			if i == n-1 {
+				break
+			}
+			updated = d.Remove(points[jeti])
+		} else {
+			cs.jets[jeti].used = true
+			cs.jets[jetj].used = true
+			nn, err := cs.ijRecombinationStep(jeti, jetj, dij)
+			if err != nil {
+				return err
+			}
+			if i == n-1 {
+				break
+			}
+			rap := cs.jets[nn].Rapidity()
+			phi := cs.jets[nn].Phi()
+			for phi < 0 {
+				phi += math.Pi * 2
+			}
+			for phi >= math.Pi*2 {
+				phi -= math.Pi * 2
+			}
+			points = append(points, delaunay.NewPoint(rap, phi))
+			// ToDo: could improve time complexity here by handling this case different, since the point inserted is in the middle of the two old points.
+			updated = d.Remove(points[jeti])
+			updtemp := d.Remove(points[jetj])
+			updated = append(updated, updtemp...)
+			updtemp = d.Insert(points[nn])
+			updated = append(updated, updtemp...)
+		}
+		for _, p := range updated {
+			nn, dist := p.NearestNeighbor()
+			if nn != nil {
+				_, y := p.Coordinates()
+				// when a nearest neighbor is farther then the border a mirror point is inserted.
+				if dij > y {
+
+				} else if dij > math.Pi*2-y {
+
+				}
+				cs.addktDistance(h, p.ID(), nn.ID(), dist)
+			}
+		}
+	}
+	return nil
+}
+
+func (cs *ClusterSequence) addktDistance(h *heap.Heap, i, j int, dist float64) {
+	yiB := cs.jetScaleForAlgorithm(&cs.jets[i])
+	if yiB == 0 {
+		h.Push(i, beamJetIndex, yiB)
+		return
+	}
+	deltaR2 := dist * cs.invR2
+	if deltaR2 > 1 {
+		h.Push(i, beamJetIndex, yiB)
+		return
+	}
+	if yiB <= cs.jetScaleForAlgorithm(&cs.jets[j]) {
+		dij := deltaR2 * yiB
+		h.Push(i, j, dij)
+	}
 }
