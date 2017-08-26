@@ -20,6 +20,7 @@ type Delaunay struct {
 	// to locate a point. The variable root's nil-ness also indicates which method to use to locate a point.
 	root *Triangle
 	r    *rand.Rand
+	n    int // n is the number of points inserted. It is used to assign the id to points.
 }
 
 // HierarchicalDelaunay creates a Delaunay Triangulation using the delaunay hierarchy.
@@ -42,6 +43,7 @@ func HierarchicalDelaunay() *Delaunay {
 	root := NewTriangle(a, b, c)
 	return &Delaunay{
 		root: root,
+		n:    0,
 	}
 }
 
@@ -69,6 +71,8 @@ func (d *Delaunay) Triangles() []*Triangle {
 // whose nearest neighbor changed due to the insertion. The slice may contain
 // duplicates.
 func (d *Delaunay) Insert(p *Point) (updatedNearestNeighbor []*Point) {
+	p.id = d.n
+	d.n++
 	if len(p.adjacentTriangles) == 0 {
 		p.adjacentTriangles = make(triangles, 0)
 	}
@@ -392,7 +396,6 @@ func (d *Delaunay) retriangulateAndSew(points []*Point, parents []*Triangle) (up
 	copies := make([]*Point, len(points))
 	for i, p := range points {
 		copies[i] = NewPoint(p.x, p.y)
-		copies[i].id = i
 		nd.Insert(copies[i])
 	}
 	ts := nd.Triangles()
