@@ -215,3 +215,26 @@ func (l location) String() string {
 		panic(fmt.Errorf("delaunay: unknown location %d", int(l)))
 	}
 }
+
+type points []*Point
+
+// remove removes given points from a slice of points.
+//
+// remove will remove all occurrences of the points.
+func (ps points) remove(pts ...*Point) points {
+	points := make(points, 0, len(ps))
+	for _, p := range ps {
+		keep := true
+		for _, pt := range pts {
+			if p.Equals(pt) {
+				keep = false
+				break
+			}
+		}
+		if keep {
+			points = append(points, p)
+		}
+
+	}
+	return points
+}

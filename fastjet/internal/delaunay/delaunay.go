@@ -70,7 +70,7 @@ func (d *Delaunay) Triangles() []*Triangle {
 // Insert inserts the point into the triangulation. It returns the points
 // whose nearest neighbor changed due to the insertion. The slice may contain
 // duplicates.
-func (d *Delaunay) Insert(p *Point) (updatedNearestNeighbor []*Point) {
+func (d *Delaunay) Insert(p *Point) (updatedNearestNeighbor points) {
 	p.id = d.n
 	d.n++
 	if len(p.adjacentTriangles) == 0 {
@@ -80,17 +80,19 @@ func (d *Delaunay) Insert(p *Point) (updatedNearestNeighbor []*Point) {
 	t, l := d.locatePointHierarchy(p, d.root)
 	switch l {
 	case inside:
-		return d.insertInside(p, t)
+		updatedNearestNeighbor = d.insertInside(p, t)
 	case onEdge:
-		return d.insertOnEdge(p, t)
+		updatedNearestNeighbor = d.insertOnEdge(p, t)
+	default:
+		panic(fmt.Errorf("delaunay: no triangle containing point %v", p))
 	}
-	panic(fmt.Errorf("delaunay: no triangle containing point %v", p))
+	return updatedNearestNeighbor.remove(d.root.A, d.root.B, d.root.C)
 }
 
 // Remove removes the point from the triangulation. It returns the points
 // whose nearest neighbor changed due to the removal. The slice may contain
 // duplicates.
-func (d *Delaunay) Remove(p *Point) (updatedNearestNeighbor []*Point) {
+func (d *Delaunay) Remove(p *Point) (updatedNearestNeighbor points) {
 	if len(p.adjacentTriangles) < 3 {
 		panic(fmt.Errorf("delaunay: can't remove point %v, not enough adjacent triangles", p))
 	}
@@ -102,7 +104,7 @@ func (d *Delaunay) Remove(p *Point) (updatedNearestNeighbor []*Point) {
 		updatedNearestNeighbor = append(updatedNearestNeighbor, updtemp...)
 	}
 	updtemp := d.retriangulateAndSew(points, ts)
-	return append(updatedNearestNeighbor, updtemp...)
+	return append(updatedNearestNeighbor, updtemp...).remove(d.root.A, d.root.B, d.root.C)
 }
 
 // locatePointHierarchy locates the point using the delaunay hierarchy.
