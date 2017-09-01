@@ -568,6 +568,11 @@ func (cs *ClusterSequence) runNlnN() error {
 			if jeti == -1 {
 				panic(fmt.Errorf("fastjet: heap is empty at index %d", i))
 			}
+			if jetj != -1 && points[jeti].mirror == jetj {
+				n, dist := points[jeti].p.SecondNearestNeighbor()
+				cs.addKtDistance(h, points, jeti, n.ID(), dist)
+				continue
+			}
 			clusteredi = points[jeti].clustered
 			recombineWithBeam = (jetj == beamJetIndex)
 			if recombineWithBeam {

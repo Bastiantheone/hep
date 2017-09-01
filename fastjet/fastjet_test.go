@@ -138,7 +138,7 @@ func TestStrategies(t *testing.T) {
 			r:          0.7,
 			scheme:     fastjet.EScheme,
 			ptmin:      0,
-			strategies: []fastjet.Strategy{fastjet.BestStrategy, fastjet.N3DumbStrategy /*FIXME(sbinet): add fastjet.NlnNStrategy*/},
+			strategies: []fastjet.Strategy{fastjet.BestStrategy, fastjet.N3DumbStrategy, fastjet.NlnNStrategy},
 			want: []result{
 				{
 					jet: fmom.NewPxPyPzE(-2.970000e+02, +1.000000e+00, +0.000000e+00, +7.970000e+02),
