@@ -547,11 +547,6 @@ func (cs *ClusterSequence) runNlnN() error {
 		n, dij := points[i].p.NearestNeighbor()
 		j := n.ID()
 		cs.addKtDistance(h, points, i, j, dij)
-		if mirror := points[i].mirror; mirror != -1 {
-			n, dij = points[mirror].p.NearestNeighbor()
-			j = n.ID()
-			cs.addKtDistance(h, points, mirror, j, dij)
-		}
 	}
 	n := len(cs.jets)
 	for i := 0; i < n; i++ {
