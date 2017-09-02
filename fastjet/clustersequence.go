@@ -511,9 +511,6 @@ func (cs *ClusterSequence) runN3Dumb() error {
 
 // runNlnN runs the clustering using a Hierarchical Delaunay triangulation
 // and a min-heap to achieve O(N*ln N) behaviour.
-//
-// There are internally asserted assumptions about absence of points
-// with coincident eta-phi coordinates.
 func (cs *ClusterSequence) runNlnN() error {
 	d := delaunay.HierarchicalDelaunay()
 	points := make([]pointInfo, len(cs.jets), 2*len(cs.jets))
@@ -617,13 +614,7 @@ func (cs *ClusterSequence) runNlnN() error {
 			}
 			// create new point from resulting jet.
 			rap := cs.jets[nn].Rapidity()
-			phi := cs.jets[nn].Phi()
-			for phi < 0 {
-				phi += math.Pi * 2
-			}
-			for phi >= math.Pi*2 {
-				phi -= math.Pi * 2
-			}
+			phi := angle0to2Pi(cs.jets[nn].Phi())
 			p := delaunay.NewPoint(rap, phi)
 			points = append(points, pointInfo{p: p, jet: nn, mirror: -1, clustered: false})
 			// ToDo: could improve time complexity here by handling this case different, since the point inserted is in the middle of the two old points. Delaunay.RemoveAndAdd()
