@@ -631,8 +631,8 @@ func (cs *ClusterSequence) runNlnN() error {
 		var updated2 []*delaunay.Point
 		// insert points whose nearest neighbor updated into the heap.
 		for _, p := range updated {
-			nn, dist := p.NearestNeighbor()
-			if nn != nil {
+			if !points[p.ID()].clustered {
+				nn, dist := p.NearestNeighbor()
 				x, y := p.Coordinates()
 				// when a nearest neighbor is farther than the border a mirror point is inserted.
 				if dij > y && points[p.ID()].mirror == -1 {
@@ -652,10 +652,12 @@ func (cs *ClusterSequence) runNlnN() error {
 			}
 		}
 		for _, p := range updated2 {
-			i := p.ID()
-			n, dist := p.NearestNeighbor()
-			j := n.ID()
-			cs.addKtDistance(h, points, i, j, dist)
+			if !points[p.ID()].clustered {
+				i := p.ID()
+				n, dist := p.NearestNeighbor()
+				j := n.ID()
+				cs.addKtDistance(h, points, i, j, dist)
+			}
 		}
 	}
 	return nil
